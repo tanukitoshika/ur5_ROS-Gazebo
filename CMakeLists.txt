@@ -17,11 +17,11 @@ generate_messages(DEPENDENCIES std_msgs)
 catkin_package(CATKIN_DEPENDS message_runtime)
 
 # Specify locations of header files.
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS})
 
 # Declare the executable, along with its source files.
-add_executable(blocks_spawner blocks_spawner.cpp)
-add_executable(blocks_poses_publisher blocks_poses_publisher.cpp)
+add_executable(blocks_spawner src/blocks_spawner.cpp)
+add_executable(blocks_poses_publisher src/blocks_poses_publisher.cpp)
 
 # Specify libraries against which to link.
 target_link_libraries(blocks_spawner ${catkin_LIBRARIES})

@@ -22,18 +22,22 @@
     http://www.gnu.org/licenses/gpl.html
 """
 
-import rospy, sys, numpy as np
+import rospy
+import sys
+import numpy as np
 import moveit_commander
 from copy import deepcopy
 import geometry_msgs.msg
 import moveit_msgs.msg
-import cv2, cv_bridge
+import cv2
+import cv_bridge
 from sensor_msgs.msg import Image
 
 
 from std_msgs.msg import Header
 from trajectory_msgs.msg import JointTrajectory
 from trajectory_msgs.msg import JointTrajectoryPoint
+
 
 class MoveItCartesianPath:
     def __init__(self):
@@ -44,7 +48,8 @@ class MoveItCartesianPath:
         self.cx = 400.0
         self.cy = 400.0
         self.bridge = cv_bridge.CvBridge()
-        self.image_sub = rospy.Subscriber('/ur5/usbcam/image_raw', Image, self.image_callback)
+        self.image_sub = rospy.Subscriber(
+            '/ur5/usbcam/image_raw', Image, self.image_callback)
 
         rospy.init_node("moveit_cartesian_path", anonymous=False)
         self.state_change_time = rospy.Time.now()
@@ -79,7 +84,7 @@ class MoveItCartesianPath:
         start_pose = self.arm.get_current_pose(self.end_effector_link).pose
 
         # Initialize the waypoints list
-        self.waypoints= []
+        self.waypoints = []
 
         # Set the first waypoint to be the starting pose
         # Append the pose to the waypoints list
@@ -103,9 +108,10 @@ class MoveItCartesianPath:
 
         self.waypoints.append(deepcopy(wpose))
 
-        if np.sqrt((wpose.position.x-start_pose.position.x)**2+(wpose.position.x-start_pose.position.x)**2 \
-            +(wpose.position.x-start_pose.position.x)**2)<0.1:
-            rospy.loginfo("Warnig: target position overlaps with the initial position!")
+        if np.sqrt((wpose.position.x-start_pose.position.x)**2+(wpose.position.x-start_pose.position.x)**2
+                   + (wpose.position.x-start_pose.position.x)**2) < 0.1:
+            rospy.loginfo(
+                "Warnig: target position overlaps with the initial position!")
 
         # self.arm.set_pose_target(wpose)
 
@@ -124,8 +130,8 @@ class MoveItCartesianPath:
            the actual RobotTrajectory.
 
         """
-        plan, fraction = self.arm.compute_cartesian_path(self.waypoints, 0.01, 0.0, True)
-
+        plan, fraction = self.arm.compute_cartesian_path(
+            self.waypoints, 0.01, 0.0, True)
 
         # plan = self.arm.plan()
 
@@ -139,15 +145,13 @@ class MoveItCartesianPath:
         else:
             rospy.loginfo("Path planning failed")
 
-
-
     def cleanup(self):
         rospy.loginfo("Stopping the robot")
 
         # Stop any current arm movement
         self.arm.stop()
 
-        #Shut down MoveIt! cleanly
+        # Shut down MoveIt! cleanly
         rospy.loginfo("Shutting down Moveit!")
         moveit_commander.roscpp_shutdown()
         moveit_commander.os._exit(0)
@@ -157,12 +161,12 @@ class MoveItCartesianPath:
             #print max(contour_sizes)[0]
             #area = cv2.contourArea(cnts)
             #print area
-            #END circle
+            # END circle
             # Get the current pose so we can add it as a waypoint
             start_pose = self.arm.get_current_pose(self.end_effector_link).pose
 
             # Initialize the waypoints list
-            self.waypoints= []
+            self.waypoints = []
 
             # Set the first waypoint to be the starting pose
             # Append the pose to the waypoints list
@@ -178,7 +182,6 @@ class MoveItCartesianPath:
             wpose.orientation.y = 0.4994
             wpose.orientation.z = -0.5121
             wpose.orientation.w = 0.5069
-
 
             self.waypoints.append(deepcopy(wpose))
 
@@ -197,8 +200,8 @@ class MoveItCartesianPath:
                the actual RobotTrajectory.
 
             """
-            plan, fraction = self.arm.compute_cartesian_path(self.waypoints, 0.01, 0.0, True)
-
+            plan, fraction = self.arm.compute_cartesian_path(
+                self.waypoints, 0.01, 0.0, True)
 
             # plan = self.arm.plan()
 
@@ -217,7 +220,7 @@ class MoveItCartesianPath:
             print "start pose",
             print start_pose
             # Initialize the waypoints list
-            self.waypoints= []
+            self.waypoints = []
 
             # Set the first waypoint to be the starting pose
             # Append the pose to the waypoints list
@@ -233,7 +236,6 @@ class MoveItCartesianPath:
             wpose.orientation.y = 0.4994
             wpose.orientation.z = -0.5121
             wpose.orientation.w = 0.5069
-
 
             self.waypoints.append(deepcopy(wpose))
 
@@ -252,8 +254,8 @@ class MoveItCartesianPath:
                the actual RobotTrajectory.
 
             """
-            plan, fraction = self.arm.compute_cartesian_path(self.waypoints, 0.01, 0.0, True)
-
+            plan, fraction = self.arm.compute_cartesian_path(
+                self.waypoints, 0.01, 0.0, True)
 
             # plan = self.arm.plan()
 
@@ -267,24 +269,24 @@ class MoveItCartesianPath:
             else:
                 rospy.loginfo("Path planning failed")
 
-
-    def image_callback(self,msg):
+    def image_callback(self, msg):
         # BEGIN BRIDGE
-        image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
+        image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         # END BRIDGE
         # BEGIN HSV
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         # END HSV
         # BEGIN FILTER
-        lower_red = np.array([ 0,  100, 100])
+        lower_red = np.array([0,  100, 100])
         upper_red = np.array([10, 255, 255])
         mask = cv2.inRange(hsv, lower_red, upper_red)
-        (_, cnts, _) = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        (_, cnts, _) = cv2.findContours(mask.copy(),
+                                        cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         #area = cv2.contourArea(cnts)
         h, w, d = image.shape
         # print h, w, d  (800,800,3)
-        #BEGIN FINDER
+        # BEGIN FINDER
         M = cv2.moments(mask)
         if M['m00'] > 0:
             cx = int(M['m10']/M['m00'])
@@ -305,23 +307,22 @@ class MoveItCartesianPath:
                     self.cy = cy
                     self.error_x = self.cx - w/2
                     self.error_y = self.cy - h/2
-                    #(_,_,w_b,h_b)=cv2.boundingRect(c)
+                    # (_,_,w_b,h_b)=cv2.boundingRect(c)
                     #print w_b,h_b
                     # BEGIN circle
                     # cv2.circle(image, (cx, cy), 10, (0,0,0), -1)
                     # cv2.putText(image, "({}, {})".format(int(cx), int(cy)), (int(cx-5), int(cy+15)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
                     # cv2.drawContours(image, cnts, -1, (255, 255, 255),1)
-                    #BGIN CONTROL
+                    # BGIN CONTROL
                 else:
                     self.area_flag = False
         #
         cv2.namedWindow("window", 1)
-        cv2.imshow("window", image )
+        cv2.imshow("window", image)
         cv2.waitKey(1)
 
-        if (rospy.Time.now() >self.state_change_time and self.area_flag and -0.4 < self.waypoints[0].position.x and self.waypoints[0].position.x < 0.6):
+        if (rospy.Time.now() > self.state_change_time and self.area_flag and -0.4 < self.waypoints[0].position.x and self.waypoints[0].position.x < 0.6):
             self.state_change_time = rospy.Time.now() + rospy.Duration(0.2)
-
 
             self.tracking()
             self.default_pose_flag = False
@@ -333,8 +334,6 @@ class MoveItCartesianPath:
             self.default_pose_flag = True
 
 
-
-
-follower=MoveItCartesianPath()
+follower = MoveItCartesianPath()
 
 rospy.spin()
